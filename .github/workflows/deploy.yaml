@@ -7,11 +7,11 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: ecsforpractice/reponame
-  ECS_CLUSTER: creative-ostrich-xpus24
-  ECS_SERVICE: punctual-service-gninxq-service-76j8si97
-  ECS_TASK_FAMILY: punctual-service-gninxq
-  CONTAINER_NAME: Main # Find this in your Task Definition JSON
+  ECR_REPOSITORY: apprepo
+  ECS_CLUSTER: white-hart
+  ECS_SERVICE: vetri
+  ECS_TASK_FAMILY: service
+  CONTAINER_NAME: main
 
 jobs:
   deploy:
