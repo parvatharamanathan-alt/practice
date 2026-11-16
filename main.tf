@@ -160,6 +160,7 @@ resource "aws_lb_target_group" "front_end_blue" {
   port     = var.port
   protocol = "HTTP"
   vpc_id   = aws_vpc.mainvpc.id # Required argument
+  target_type = "ip"
 }
 
 resource "aws_lb_target_group" "front_end_green" {
@@ -167,6 +168,7 @@ resource "aws_lb_target_group" "front_end_green" {
   port     = var.port
   protocol = "HTTP"
   vpc_id   = aws_vpc.mainvpc.id # Required argument
+  target_type = "ip"
 }
 #
 resource "aws_lb_listener" "front_end" {
