@@ -246,8 +246,8 @@ resource "aws_ecs_task_definition" "mongo" {
     {
       name      = "main"
       image     = "${aws_ecr_repository.practice.repository_url}:latest"
-      cpu       = 2
-      memory    = 4
+      cpu       = 512
+      memory    = 1024
       essential = true
       portMappings = [
         {
