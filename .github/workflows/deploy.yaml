@@ -1,9 +1,9 @@
-name: Deploy to Amazon ECS
+name: Deploy Infrastructure and Application
 
 on:
   push:
     branches:
-      - main # Change to 'master' if that is your default branch name
+      - main
 
 env:
   AWS_REGION: us-east-1
@@ -27,6 +27,24 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+    # ==========================================
+    # TERRAFORM DEPLOYMENT
+    # ==========================================
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Plan
+      run: terraform plan -no-color
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve -no-color
+
+    # ==========================================
+    # APPLICATION BUILD & DEPLOY
+    # ==========================================
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
@@ -35,7 +53,6 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        # Uses the unique GitHub commit hash as the image tag
         IMAGE_TAG: ${{ github.sha }} 
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
