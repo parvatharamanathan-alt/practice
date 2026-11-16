@@ -1,1 +1,38 @@
+name: Destroy AWS Infrastructure
 
+# The workflow_dispatch trigger ensures this only runs when you manually click "Run workflow" in GitHub
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write # Required if using AWS OIDC authentication
+  contents: read
+
+jobs:
+  destroy-infra:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # If using OIDC (Recommended)
+          role-to-assume: arn:aws:iam::YOUR_ACCOUNT_ID:role/YOUR_GITHUB_ACTIONS_ROLE
+          aws-region: us-east-1
+          
+          # If using GitHub Secrets instead of OIDC, comment out 'role-to-assume' and uncomment below:
+          # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v5
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
