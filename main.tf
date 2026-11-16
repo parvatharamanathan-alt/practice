@@ -297,4 +297,22 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
 
 
 
+# S3 Bucket 
+resource "aws_s3_bucket" "bucks" {
+  bucket = "bucket001"
 
+  tags = {
+    Name        = "My bucket"
+    Environment = "practice"
+  }
+}
+
+#State FIle storage
+
+terraform {
+  backend "s3" {
+    bucket = "bucket001" # You must create this bucket in AWS first
+    key    = "network/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
