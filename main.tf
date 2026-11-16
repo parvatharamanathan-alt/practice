@@ -264,6 +264,7 @@ resource "aws_ecs_service" "vetriservice" {
   task_definition = aws_ecs_task_definition.mongo.arn
   launch_type = "FARGATE"
   desired_count   = 2
+  wait_for_steady_state = false # Prevents Terraform from hanging before the first image is pushed
 
   network_configuration{
     subnets = [aws_subnet.private.id]
