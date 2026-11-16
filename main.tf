@@ -1,3 +1,10 @@
+terraform {
+  backend "s3" {
+    bucket = "bucks-2404" # You must create this bucket in AWS first
+    key    = "network/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
 
 
 #VPC - mainvpc
