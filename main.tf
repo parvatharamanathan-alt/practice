@@ -208,8 +208,8 @@ resource "aws_security_group" "ecssg" {
   vpc_id      = aws_vpc.mainvpc.id
 
   ingress {
-    from_port       = 5000
-    to_port         = 5000
+    from_port       = 8501
+    to_port         = 8501
     protocol        = "tcp"
     security_groups = [aws_security_group.securelb.id]
   }
@@ -251,7 +251,7 @@ resource "aws_ecs_task_definition" "mongo" {
       essential = true
       portMappings = [
         {
-          containerPort = 5000
+          containerPort = 8501
         }
       ]
     }
@@ -275,7 +275,7 @@ resource "aws_ecs_service" "vetriservice" {
   load_balancer {
     target_group_arn = aws_lb_target_group.front_end_blue.arn
     container_name   = "main"
-    container_port   = 5000
+    container_port   = 8501
   }
 }
 
