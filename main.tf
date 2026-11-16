@@ -6,7 +6,6 @@ terraform {
   }
 }
 
-
 #VPC - mainvpc
 resource "aws_vpc" "mainvpc" {
   cidr_block       = var.vpc_cidr
