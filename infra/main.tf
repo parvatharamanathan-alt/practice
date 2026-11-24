@@ -10,6 +10,8 @@ terraform {
 resource "aws_vpc" "mainvpc" {
   cidr_block       = var.vpc_cidr
   instance_tenancy = "default"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 
   tags = {
     Name = "main"
@@ -391,7 +393,7 @@ resource "aws_ecs_service" "paymentservice" {
 # Service Discovery
 
 resource "aws_service_discovery_service" "discoveryservice" {
-  name = "containerconnection"
+  name = "shopit"
 
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.catalog-to-payment.id
@@ -402,9 +404,5 @@ resource "aws_service_discovery_service" "discoveryservice" {
     }
 
     routing_policy = "MULTIVALUE"
-  }
-
-  health_check_config {
-    failure_threshold = 1
   }
 }
