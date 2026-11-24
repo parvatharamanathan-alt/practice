@@ -301,3 +301,79 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_role_policy" {
   role       = aws_iam_role.ecs_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
+
+
+#PAYMENT CONTAINER 
+
+#ECS Security Group - Ingress - Source set to Catalog Security group and Egress is for 0.0.0.0
+
+resource "aws_security_group" "payment-sg" {
+  name        = "payment-sg"
+  description = "Payment Ecs connected to vpc and source is from catalog ecs as it should not connected to Internet"
+  vpc_id      = aws_vpc.mainvpc.id
+
+  ingress {
+    from_port       = 5000
+    to_port         = 5000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecssg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+#Payment ECR
+resource "aws_ecr_repository" "payment" {
+  name                 = "payrepo"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+#Payment ECS
+
+#Task Definition
+resource "aws_ecs_task_definition" "payment" {
+  family = "payment-service"
+  requires_compatibilities = ["FARGATE"]
+  network_mode = "awsvpc"
+  cpu = "512"
+  memory = "1024"
+  execution_role_arn       = aws_iam_role.ecs_execution_role.arn
+  container_definitions = jsonencode([
+    {
+      name      = "main"
+      image     = "${aws_ecr_repository.payment.repository_url}:latest"
+      cpu       = 512
+      memory    = 1024
+      essential = true
+      portMappings = [
+        {
+          containerPort = 5000
+        }
+      ]
+    }
+  ])
+}
+
+#Service
+resource "aws_ecs_service" "paymentservice" {
+  name            = "vetripayment"
+  cluster         = aws_ecs_cluster.cluster.id
+  task_definition = aws_ecs_task_definition.payment.arn
+  launch_type = "FARGATE"
+  desired_count   = 2
+  wait_for_steady_state = false # Prevents Terraform from hanging before the first image is pushed
+
+  network_configuration{
+    subnets = [aws_subnet.private.id]
+    security_groups = [aws_security_group.payment-sg.id]
+  }
+}
