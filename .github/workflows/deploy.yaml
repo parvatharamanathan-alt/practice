@@ -47,14 +47,14 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          docker build -t $ECR_REGISTRY/$PRODUCT_ECR_REPO:latest ./product_app
+          docker build -t $ECR_REGISTRY/$PRODUCT_ECR_REPO:latest ./catalog
           docker push $ECR_REGISTRY/$PRODUCT_ECR_REPO:latest
 
       - name: Build and Push Payment App Image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          docker build -t $ECR_REGISTRY/$PAYMENT_ECR_REPO:latest ./payment_app
+          docker build -t $ECR_REGISTRY/$PAYMENT_ECR_REPO:latest ./payment
           docker push $ECR_REGISTRY/$PAYMENT_ECR_REPO:latest
 
       - name: Force New Deployment on Product ECS Service
