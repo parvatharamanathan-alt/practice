@@ -1,0 +1,53 @@
+name: Destroy ECS Infrastructure
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECS_CLUSTER: white-hart
+  PRODUCT_ECS_SERVICE: vetri
+  PAYMENT_ECS_SERVICE: vetripayment
+  PRODUCT_ECR_REPO: apprepo
+  PAYMENT_ECR_REPO: payrepo
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Scale Down ECS Services to 0
+        run: |
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.PRODUCT_ECS_SERVICE }} --desired-count 0 || true
+          aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.PAYMENT_ECS_SERVICE }} --desired-count 0 || true
+          echo "Waiting for tasks to stop and deregister from Cloud Map..."
+          sleep 30
+
+      - name: Empty ECR Repositories
+        run: |
+          for REPO in ${{ env.PRODUCT_ECR_REPO }} ${{ env.PAYMENT_ECR_REPO }}; do
+            IMAGES=$(aws ecr list-images --repository-name $REPO --query 'imageIds[*]' --output json 2>/dev/null || echo "[]")
+            if [ "$IMAGES" != "[]" ] && [ -n "$IMAGES" ]; then
+              aws ecr batch-delete-image --repository-name $REPO --image-ids "$IMAGES" || true
+            fi
+          done
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: ./infra
+        run: terraform init -input=false
+
+      - name: Terraform Destroy
+        working-directory: ./infra
+        run: terraform destroy -auto-approve -input=false -no-color
