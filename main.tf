@@ -377,3 +377,31 @@ resource "aws_ecs_service" "paymentservice" {
     security_groups = [aws_security_group.payment-sg.id]
   }
 }
+
+ # Private DNS Namespace for Service to Service Communication
+ resource "aws_service_discovery_private_dns_namespace" "catalog-to-payment" {
+  name        = "habibi.dxb.local"
+  description = "Private DNS Namespace for Service to Service Communication"
+  vpc         = aws_vpc.mainvpc.id
+}
+
+# Service Discovery
+
+resource "aws_service_discovery_service" "discoveryservice" {
+  name = "containerconnection"
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.catalog-to-payment.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+
+    routing_policy = "MULTIVALUE"
+  }
+
+  health_check_config {
+    failure_threshold = 1
+  }
+}
